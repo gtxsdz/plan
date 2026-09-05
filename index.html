@@ -287,7 +287,7 @@
   .btn-do-login:hover{background:#4a3010;}
   .btn-login-cancel{background:none;border:none;color:#9a8060;cursor:pointer;font-size:12px;margin-top:10px;font-family:inherit;text-decoration:underline;}
 
-  /* MODAL EDYCJI - POPRAWIONY */
+  /* MODAL EDYCJI */
   .edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
   .edit-overlay.open{display:flex;}
   .edit-box{background:#fbf5e6;border:2px solid #d8c191;border-radius:18px;padding:24px 28px 28px;max-width:680px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35);margin:auto;position:relative;}
@@ -416,10 +416,10 @@
     <div class="mobile-schedule" id="mobileSchedule"></div>
 
     <div class="bottom-bar">
-      <button id="themeToggle" class="theme-toggle-btn">🌙 Tryb ciemny</button>
-      <button id="editBtn" class="edit-btn">✏️ Edytuj plan</button>
-      <button id="adminLogoutBtn" class="admin-logout-btn">🔒 Wyloguj</button>
-      <button id="adminLoginBtn" class="admin-login-btn">🔑 Admin</button>
+      <button type="button" id="themeToggle" class="theme-toggle-btn">🌙 Tryb ciemny</button>
+      <button type="button" id="editBtn" class="edit-btn">✏️ Edytuj plan</button>
+      <button type="button" id="adminLogoutBtn" class="admin-logout-btn">🔒 Wyloguj</button>
+      <button type="button" id="adminLoginBtn" class="admin-login-btn">🔑 Admin</button>
     </div>
   </div>
 </div>
@@ -430,23 +430,23 @@
     <h3>🔑 Panel administratora</h3>
     <input type="password" id="adminPasswordInput" placeholder="Hasło administratora" autocomplete="current-password"/>
     <div class="login-error" id="loginError">Błędne hasło. Spróbuj ponownie.</div>
-    <button class="btn-do-login" id="btnDoLogin">Zaloguj</button><br>
-    <button class="btn-login-cancel" id="btnLoginCancel">Anuluj</button>
+    <button type="button" class="btn-do-login" id="btnDoLogin">Zaloguj</button><br>
+    <button type="button" class="btn-login-cancel" id="btnLoginCancel">Anuluj</button>
   </div>
 </div>
 
 <!-- MODAL EDYCJI -->
 <div class="edit-overlay" id="editOverlay">
   <div class="edit-box">
-    <button class="edit-close" id="editClose">✕</button>
+    <button type="button" class="edit-close" id="editClose" aria-label="Zamknij">✕</button>
     <h2>✏️ Edycja planu lekcji</h2>
     <p class="edit-hint">Wybierz przedmiot z listy i wpisz numer sali. Kliknij 🚫 aby ustawić okienko.</p>
     <div class="edit-tabs" id="editTabs"></div>
     <div id="editDayPanels"></div>
     <div class="modal-actions">
       <div class="save-status" id="saveStatus"></div>
-      <button class="btn-cancel" id="btnCancel">Anuluj</button>
-      <button class="btn-save" id="btnSave">💾 Zapisz w chmurze</button>
+      <button type="button" class="btn-cancel" id="btnCancel">Anuluj</button>
+      <button type="button" class="btn-save" id="btnSave">💾 Zapisz w chmurze</button>
     </div>
   </div>
 </div>
@@ -532,7 +532,7 @@
       { icon:'📚', name:'j. polski',    room:'125'      },
       { icon:'📚', name:'j. polski',    room:'125'      },
       { icon:'⚙️', name:'technika',     room:'103'      },
-      { icon:'⚽', name:'wf',           room:'s. gimn.' },
+      { icon:'🏃', name:'wf',           room:'s. gimn.' },
       { empty:true }
     ],[
       { empty:true },
@@ -669,6 +669,7 @@
     tc.innerHTML = '';
     daysData.forEach(d => {
       const b = document.createElement('button');
+      b.type = 'button';
       b.className = `tab-btn${d.dayNum===init?' active':''}`;
       b.textContent = d.shortName;
       b.onclick = () => switchTab(d.dayNum);
@@ -834,6 +835,7 @@
 
     daysData.forEach((day,di) => {
       const tab = document.createElement('button');
+      tab.type = 'button';
       tab.className=`edit-tab-btn${di===0?' active':''}`;
       tab.textContent=day.name;
       tab.addEventListener('click',()=>{
@@ -853,7 +855,6 @@
         const currentName = isEmpty ? '' : (l.name || '');
         const currentIcon = isEmpty ? '🚫' : (SUBJECT_MAP[currentName.toLowerCase()] || l.icon || '📖');
         
-        // Tworzenie opcji wyboru
         let optionsHtml = '';
         let matched = false;
         SUBJECT_OPTIONS.forEach(opt => {
@@ -873,20 +874,18 @@
           <div class="icon-preview">${currentIcon}</div>
           <select class="es" ${isEmpty?'disabled':''}>${optionsHtml}</select>
           <input type="text" class="er" placeholder="Sala" value="${isEmpty?'':(l.room||'')}" ${isEmpty?'disabled':''}>
-          <button class="empty-toggle${isEmpty?' toggled':''}" title="Okienko">🚫</button>`;
+          <button type="button" class="empty-toggle${isEmpty?' toggled':''}" title="Okienko">🚫</button>`;
 
         const selectEl = row.querySelector('.es');
         const iconPreviewEl = row.querySelector('.icon-preview');
         const emptyToggleBtn = row.querySelector('.empty-toggle');
         const roomInput = row.querySelector('.er');
 
-        // Automatyczna zmiana ikony po zmianie przedmiotu
         selectEl.addEventListener('change', () => {
           const val = selectEl.value;
           iconPreviewEl.textContent = SUBJECT_MAP[val] || '📖';
         });
 
-        // Przełączanie okienka
         emptyToggleBtn.addEventListener('click', function(){
           const now = this.classList.toggle('toggled');
           row.classList.toggle('is-empty', now);
@@ -915,6 +914,14 @@
     });
     return nd;
   }
+
+  /* ===== GLOBALNE SKRÓTY (ESC) ===== */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('loginOverlay').classList.remove('open');
+      document.getElementById('editOverlay').classList.remove('open');
+    }
+  });
 
   /* ===== START ===== */
   document.addEventListener('DOMContentLoaded', async () => {
