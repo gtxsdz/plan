@@ -465,6 +465,42 @@
   /* ===== LOCAL STORAGE KEY ===== */
   const CACHE_KEY = 'schedule_offline_cache_v1';
 
+  /* ===== REJESTRACJA SERVICE WORKERA DO PEŁNEGO REFRESHU OFFLINE ===== */
+  function initOfflineServiceWorker() {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      const swCode = `
+        const CACHE_NAME = 'plan-lekcji-cache-v2';
+        self.addEventListener('install', (e) => {
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', (e) => {
+          e.waitUntil(clients.claim());
+        });
+        self.addEventListener('fetch', (e) => {
+          if (e.request.method !== 'GET') return;
+          e.respondWith(
+            fetch(e.request)
+              .then((response) => {
+                if (response && response.status === 200) {
+                  const copy = response.clone();
+                  caches.open(CACHE_NAME).then((cache) => cache.put(e.request, copy));
+                }
+                return response;
+              })
+              .catch(() => {
+                return caches.match(e.request).then((cached) => cached || caches.match(location.pathname));
+              })
+          );
+        });
+      `;
+      try {
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(blobUrl).catch(() => {});
+      } catch(e) { console.warn('SW register note:', e); }
+    }
+  }
+
   /* ===== FIREBASE ===== */
   const firebaseConfig = {
     apiKey: "AIzaSyAcf3E50EtPo1kUWs2ybUT8mWzVtWqlSqY",
@@ -608,9 +644,9 @@
     }
   }
 
-  /* ===== FIREBASE ODCZYT / ZAPIS (Z POWIĄZANIEM OFFLINE) ===== */
+  /* ===== FIREBASE ODCZYT / ZAPIS ===== */
   async function loadData() {
-    // 1. Ładowanie natychmiastowe z pamięci podręcznej (Offline-first)
+    // 1. Ładowanie z pamięci podręcznej
     const cached = loadFromLocalStorage();
     if (cached) {
       daysData = cached;
@@ -619,7 +655,7 @@
       updateStatus();
     }
 
-    // 2. Pobieranie nowszych danych z Firebase jeśli jest połączenie
+    // 2. Synchronizacja z siecią jeśli połączono
     if (navigator.onLine) {
       try {
         const snap = await get(ref(db, 'schedule/days'));
@@ -634,17 +670,15 @@
           renderMobile();
           updateStatus();
         }
-      } catch(e) { console.warn('Firebase load error (używam lokalnej kopii):', e.message); }
+      } catch(e) { console.warn('Firebase load error:', e.message); }
     }
     updateOfflineStatusDisplay();
   }
 
   async function saveData(data) {
-    // Najpierw zapisuj w lokalnej pamięci
     saveToLocalStorage(data);
     daysData = data;
 
-    // Próba synchronizacji w chmurze Firebase
     if (navigator.onLine) {
       await set(ref(db, 'schedule/days'), data.map(d => ({ lessons: d.lessons })));
     } else {
@@ -991,6 +1025,7 @@
 
   /* ===== START ===== */
   document.addEventListener('DOMContentLoaded', async () => {
+    initOfflineServiceWorker();
     await loadData();
     setupTheme();
     setupLogin();
