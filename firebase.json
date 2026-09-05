@@ -1,0 +1,23 @@
+{
+  "hosting": [
+    {
+      "site": "plan5a",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    },
+    {
+      "site": "plan-e5ce7",
+      "redirects": [
+        {
+          "source": "**",
+          "destination": "https://plan5a.web.app",
+          "type": 301
+        }
+      ]
+    }
+  ]
+}

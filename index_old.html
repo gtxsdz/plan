@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan lekcji klasy Va</title>
+<style>
+  @page{ size:A4 landscape; margin:6mm; }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Comic Sans MS","Segoe UI", Verdana, sans-serif;
+    margin:0;
+    padding:14px;
+    background:#e8dcc3;
+    color:#4a3616;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  .sheet{
+    max-width:1180px;
+    margin:0 auto;
+    background:linear-gradient(180deg,#fbf5e6,#f2e7cf);
+    border-radius:20px;
+    padding:20px 26px 24px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(120,90,40,.22);
+    border:3px solid #d8c191;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* warstwa ozdobników SVG */
+  .art{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+  .content{ position:relative; z-index:2; }
+
+  /* ===== TOP BAR (STATUS + PASEK POSTĘPU) ===== */
+  .top-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .status-banner {
+    width: 100%;
+    background: #fff6e2;
+    border: 2px solid #d9b98a;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 13.5px;
+    font-weight: bold;
+    color: #5a3d1e;
+    box-shadow: 0 2px 5px rgba(120,90,40,.15);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* Pasek postępu trwającej lekcji / przerwy */
+  .progress-container {
+    width: 100%;
+    height: 7px;
+    background: rgba(120, 90, 40, 0.15);
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+    display: none;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff4757, #ff6b81);
+    border-radius: 4px;
+    transition: width 0.4s ease, background 0.3s ease;
+  }
+
+  /* ===== BOTTOM BAR (DARK MODE TOGGLE) ===== */
+  .bottom-bar {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+  }
+  .theme-toggle-btn {
+    background: #5a3d1e;
+    color: #fff6e2;
+    border: 2px solid #7a5a34;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  }
+  .theme-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  header{ text-align:center; margin:0 0 16px; }
+  header h1{
+    margin:0;
+    font-size:36px;
+    color:#5a3d1e;
+    letter-spacing:1px;
+    text-shadow:1px 1px 0 #fff, 2px 2px 0 #d9b98a;
+  }
+  header .wych{ font-size:15px; color:#7a5a34; margin-top:6px; }
+
+  table{ width:100%; border-collapse:separate; border-spacing:7px; table-layout:fixed; }
+  thead th{
+    font-size:15px;
+    color:#5a3d1e;
+    background:linear-gradient(180deg,#f0dcae,#e3c481);
+    border:2px solid #c9a55f;
+    border-radius:10px;
+    padding:9px 4px;
+    box-shadow:0 2px 3px rgba(120,90,40,.2);
+  }
+  th.timo{ width:58px; }
+
+  td.nr{ text-align:center; }
+  td.nr .num{
+    display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+    width:52px; min-height:48px;
+    border-radius:12px;
+    background:linear-gradient(180deg,#fff6e2,#f5e4bd);
+    border:2px solid #d9b98a;
+    color:#6a4a24; padding:4px 2px;
+    box-shadow:0 2px 3px rgba(120,90,40,.18);
+  }
+  td.nr .num .bell{ font-size:13px; line-height:1; font-weight:700; }
+  td.nr .num .no{ font-weight:900; font-size:16px; line-height:1.1; }
+  td.nr .num .time{ font-size:8.5px; color:#8a6c40; line-height:1.05; margin-top:1px; white-space:nowrap; font-weight:700; }
+
+  td.cell{ padding:0; }
+  .tile{
+    position:relative;
+    border-radius:12px;
+    padding:7px 6px;
+    min-height:48px;
+    height:68px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    text-align:center;
+    background:rgba(255,253,246,.96);
+    border:2px solid #c9a55f;
+    box-shadow:0 3px 5px rgba(120,90,40,.2), inset 0 1px 0 rgba(255,255,255,.7);
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  tbody tr:nth-child(odd)  td.cell:nth-child(even) .tile{ transform:rotate(-1.2deg); }
+  tbody tr:nth-child(even) td.cell:nth-child(odd)  .tile{ transform:rotate(1.2deg); }
+  tbody tr:nth-child(odd)  td.cell:nth-child(3n)   .tile{ transform:rotate(0.8deg); }
+  .tile .ico{ font-size:19px; }
+  .tile .txt .p{ display:block; font-weight:bold; color:#4a3616; font-size:13.5px; }
+  .tile .txt .s{ display:block; font-size:11px; color:#8a6c40; font-weight:700; }
+
+  .col-pon .tile{ border-color:#e0a3b4; background:linear-gradient(180deg,#fffdf6,#ffeef3); }
+  .col-wt  .tile{ border-color:#e7b877; background:linear-gradient(180deg,#fffdf6,#fff5e6); }
+  .col-sr  .tile{ border-color:#8fca8f; background:linear-gradient(180deg,#fffdf6,#eefaef); }
+  .col-czw .tile{ border-color:#8bbfe0; background:linear-gradient(180deg,#fffdf6,#eaf5ff); }
+  .col-pt  .tile{ border-color:#b79ad6; background:linear-gradient(180deg,#fffdf6,#f5eeff); }
+
+  .empty{ background:rgba(251,243,223,.7); border-style:dashed; border-color:#d9c49a; min-height:34px; display:flex; align-items:center; justify-content:center; cursor:default; }
+  .empty .p{ color:#c3ad82; }
+
+  .day-label{ display:none; }
+  .mobile-schedule{ display:none; }
+  .mobile-tabs{ display:none; }
+
+  /* ===== PODŚWIETLANIE I PRZYCIEMNIANIE PRZEDMIOTU ===== */
+  .tile.dimmed, .lesson-info.dimmed {
+    opacity: 0.25 !important;
+    filter: grayscale(70%);
+  }
+  .tile.highlighted, .lesson-info.highlighted {
+    transform: scale(1.06) !important;
+    border-color: #ff9f43 !important;
+    box-shadow: 0 0 14px rgba(255, 159, 67, 0.85) !important;
+    z-index: 5;
+  }
+
+  /* ===== PODŚWIETLENIE TRWAJĄCEJ LEKCJI ===== */
+  @keyframes activePulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7), 0 4px 10px rgba(255, 71, 87, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(255, 71, 87, 0.2), 0 6px 15px rgba(255, 71, 87, 0.5); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7), 0 4px 10px rgba(255, 71, 87, 0.3); }
+  }
+
+  .tile.active-lesson, .lesson-info.active-lesson {
+    border: 2.5px solid #ff4757 !important;
+    background: linear-gradient(180deg, #ffffff, #ffebeb) !important;
+    animation: activePulse 2s infinite;
+    position: relative;
+    z-index: 4;
+  }
+
+  .tile.active-lesson .txt .p, .lesson-info.active-lesson .lesson-name {
+    color: #2b1b17 !important;
+  }
+  .tile.active-lesson .txt .s, .lesson-info.active-lesson .lesson-room {
+    color: #5a3d1e !important;
+  }
+
+  .tile.active-lesson::after, .lesson-info.active-lesson::after {
+    content: "🔴 TERAZ";
+    position: absolute;
+    top: -9px;
+    right: -4px;
+    background: #ff4757;
+    color: #ffffff;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 6px;
+    line-height: 1.2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    white-space: nowrap;
+  }
+
+  /* ===== CIEMNY MOTYW / DARK MODE ===== */
+  body.dark-mode {
+    background: #181920;
+    color: #e1e1e6;
+  }
+  body.dark-mode .sheet {
+    background: linear-gradient(180deg, #222430, #1a1b24);
+    border-color: #3d3b4e;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  }
+  body.dark-mode header h1 {
+    color: #f0e6d2;
+    text-shadow: 1px 1px 0 #111, 2px 2px 0 #3a3224;
+  }
+  body.dark-mode header .wych { color: #c4b59d; }
+  body.dark-mode thead th {
+    background: linear-gradient(180deg, #383a4d, #2b2d3c);
+    color: #f0e6d2;
+    border-color: #4a4d66;
+  }
+  body.dark-mode td.nr .num, body.dark-mode .lesson-time {
+    background: linear-gradient(180deg, #2d2f3e, #232532);
+    border-color: #44475a;
+    color: #f0e6d2;
+  }
+  body.dark-mode td.nr .num .time, body.dark-mode .lesson-time .time { color: #b0a8b9; }
+  body.dark-mode .tile, body.dark-mode .lesson-info {
+    background: #252836;
+    border-color: #3d4155;
+  }
+  body.dark-mode .tile .txt .p, body.dark-mode .lesson-name { color: #f0e6d2; }
+  body.dark-mode .tile .txt .s, body.dark-mode .lesson-room { color: #a49b8b; }
+
+  /* Dedykowane podświetlenie aktywnej lekcji w trybie ciemnym */
+  body.dark-mode .tile.active-lesson, body.dark-mode .lesson-info.active-lesson {
+    background: linear-gradient(180deg, #421d27, #2d131b) !important;
+    border-color: #ff4757 !important;
+  }
+  body.dark-mode .tile.active-lesson .txt .p,
+  body.dark-mode .lesson-info.active-lesson .lesson-name {
+    color: #ffffff !important;
+  }
+  body.dark-mode .tile.active-lesson .txt .s,
+  body.dark-mode .lesson-info.active-lesson .lesson-room {
+    color: #ffccd5 !important;
+  }
+
+  body.dark-mode .status-banner {
+    background: #252836;
+    border-color: #3d4155;
+    color: #f0e6d2;
+  }
+  body.dark-mode .progress-container {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  body.dark-mode .theme-toggle-btn {
+    background: #e3c481;
+    color: #222430;
+    border-color: #f0dcae;
+  }
+  body.dark-mode .day-card {
+    background: linear-gradient(180deg, #222430, #1a1b24);
+    border-color: #3d3b4e;
+  }
+  body.dark-mode .day-header {
+    background: linear-gradient(180deg, #383a4d, #2b2d3c);
+    color: #f0e6d2;
+    border-bottom-color: #4a4d66;
+  }
+  body.dark-mode .empty {
+    background: rgba(40, 42, 58, 0.6);
+    border-color: #44475a;
+  }
+  body.dark-mode .empty .p, body.dark-mode .lesson-empty { color: #72758e; }
+  body.dark-mode .art { opacity: 0.35; }
+
+  @media print{
+    body{background:#fff;padding:0;}
+    .sheet{box-shadow:none;max-width:100%;}
+    .top-bar, .bottom-bar { display:none; }
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+
+  /* ===== TABLET RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .art{ display:none; }
+    .sheet{ padding:16px 18px 20px; }
+    header h1{ font-size:28px; }
+    table{ border-spacing:5px; }
+    thead th{ font-size:13px; padding:6px 3px; }
+    td.nr .num{ width:48px; min-height:42px; }
+    td.nr .num .no{ font-size:14px; }
+    td.nr .num .time{ font-size:7px; }
+    .tile{ min-height:56px; height:56px; padding:5px 3px; }
+    .tile .ico{ font-size:16px; }
+    .tile .txt .p{ font-size:11px; }
+    .tile .txt .s{ font-size:9px; }
+  }
+
+  /* ===== MOBILE RESPONSIVE & ZAKŁADKI ===== */
+  @media (max-width: 768px) {
+    body{ padding:8px; }
+    .sheet{ padding:12px 12px 16px; border-radius:14px; }
+    header h1{ font-size:20px; margin-bottom:6px; }
+    header .wych{ font-size:11px; margin-top:2px; }
+    table{ display:none; }
+    .mobile-schedule{ display:block; }
+    
+    .mobile-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      justify-content: space-between;
+    }
+    
+    .day-card {
+      display: none;
+    }
+    .day-card.active-tab {
+      display: block;
+    }
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 10px;
+    border: 2px solid #d9b98a;
+    background: #fff6e2;
+    color: #5a3d1e;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 12.5px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(120,90,40,.12);
+  }
+  .tab-btn.active {
+    background: #5a3d1e;
+    color: #fff6e2;
+    border-color: #5a3d1e;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+  }
+  body.dark-mode .tab-btn {
+    background: #252836;
+    border-color: #3d4155;
+    color: #f0e6d2;
+  }
+  body.dark-mode .tab-btn.active {
+    background: #e3c481;
+    color: #222430;
+    border-color: #f0dcae;
+  }
+
+  @media (max-width: 480px) {
+    body{ padding:4px; }
+    .sheet{ padding:8px 8px 12px; border-radius:10px; }
+    header h1{ font-size:16px; margin-bottom:4px; }
+    header .wych{ font-size:10px; }
+    .status-banner { font-size: 11.5px; padding: 6px 10px; }
+    .tab-btn { font-size: 11px; padding: 6px 2px; }
+  }
+
+  /* ===== MOBILE SCHEDULE STYLES ===== */
+  .day-card {
+    margin-bottom:14px;
+    background:linear-gradient(180deg,#fbf5e6,#f2e7cf);
+    border-radius:14px;
+    border:2px solid #d8c191;
+    overflow:hidden;
+    box-shadow:0 3px 8px rgba(120,90,40,.15);
+  }
+  .day-header {
+    background:linear-gradient(180deg,#f0dcae,#e3c481);
+    padding:10px 12px;
+    font-weight:bold;
+    font-size:15px;
+    color:#5a3d1e;
+    border-bottom:2px solid #c9a55f;
+    text-align:center;
+  }
+  .lessons-container { padding:10px; }
+  .lesson-row {
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+    align-items:flex-start;
+  }
+  .lesson-time {
+    flex-shrink:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    width:56px; min-height:56px; height:56px;
+    border-radius:10px;
+    background:linear-gradient(180deg,#fff6e2,#f5e4bd);
+    border:2px solid #d9b98a;
+    padding:4px; font-size:11px; color:#6a4a24;
+    box-shadow:0 2px 3px rgba(120,90,40,.18);
+    text-align:center;
+  }
+  .lesson-time .bell { font-size:14px; line-height:1.1; font-weight:700; }
+  .lesson-time .no { font-weight:900; font-size:14px; line-height:1; }
+  .lesson-time .time { font-size:7.5px; color:#8a6c40; margin-top:1px; white-space:nowrap; font-weight:700; }
+
+  .lesson-info {
+    flex:1;
+    display:flex; align-items:center; justify-content:center;
+    min-height:56px; height:56px;
+    border-radius:10px; padding:8px 10px; text-align:center;
+    background:rgba(255,253,246,.96);
+    border:2px solid #c9a55f;
+    box-shadow:0 2px 4px rgba(120,90,40,.15);
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.25s ease, box-shadow 0.25s ease;
+  }
+  .lesson-content { width:100%; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .lesson-icon { font-size:20px; line-height:1; }
+  .lesson-name { font-weight:bold; color:#4a3616; font-size:13px; line-height:1.2; }
+  .lesson-room { font-size:10px; color:#8a6c40; font-weight:700; }
+  .lesson-empty { color:#c3ad82; font-size:13px; font-style:italic; cursor:default; }
+
+  .day-pon .lesson-info { border-color:#e0a3b4; background:linear-gradient(180deg,#fffdf6,#ffeef3); }
+  .day-wt .lesson-info { border-color:#e7b877; background:linear-gradient(180deg,#fffdf6,#fff5e6); }
+  .day-sr .lesson-info { border-color:#8fca8f; background:linear-gradient(180deg,#fffdf6,#eefaef); }
+  .day-czw .lesson-info { border-color:#8bbfe0; background:linear-gradient(180deg,#fffdf6,#eaf5ff); }
+  .day-pt .lesson-info { border-color:#b79ad6; background:linear-gradient(180deg,#fffdf6,#f5eeff); }
+
+  @media (max-width: 480px) {
+    .day-card { margin-bottom:12px; }
+    .day-header { padding:8px 10px; font-size:13px; }
+    .lessons-container { padding:8px; }
+    .lesson-row { gap:8px; margin-bottom:8px; }
+    .lesson-time { width:50px; min-height:50px; font-size:10px; height:50px; }
+    .lesson-time .bell { font-size:12px; font-weight:700; }
+    .lesson-time .no { font-size:12px; font-weight:900; }
+    .lesson-info { min-height:50px; padding:6px 8px; height:50px; }
+    .lesson-icon { font-size:18px; }
+    .lesson-name { font-size:12px; }
+    .lesson-room { font-size:9px; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+
+    <!-- ===== OZDOBNIKI SVG ===== -->
+    <svg class="art" viewBox="0 0 1180 780" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(10,8)">
+        <g transform="rotate(-38)">
+          <rect x="0" y="0" width="130" height="17" rx="3" fill="#ff6b6b"/>
+          <rect x="0" y="0" width="26" height="17" fill="#ffd36b"/>
+          <polygon points="130,0 150,8.5 130,17" fill="#f4c07a"/>
+          <polygon points="141,4 150,8.5 141,13" fill="#5a3d1e"/>
+        </g>
+        <g transform="rotate(-24) translate(-2,4)">
+          <rect x="0" y="0" width="122" height="15" rx="3" fill="#4db6ff"/>
+          <rect x="0" y="0" width="22" height="15" fill="#bfe6ff"/>
+          <polygon points="122,0 140,7.5 122,15" fill="#f4c07a"/>
+          <polygon points="132,4 140,7.5 132,11" fill="#5a3d1e"/>
+        </g>
+        <g transform="rotate(-10) translate(-4,10)">
+          <rect x="0" y="0" width="118" height="15" rx="3" fill="#5ecb7a"/>
+          <rect x="0" y="0" width="22" height="15" fill="#c6efd0"/>
+          <polygon points="118,0 136,7.5 118,15" fill="#f4c07a"/>
+          <polygon points="128,4 136,7.5 128,11" fill="#5a3d1e"/>
+        </g>
+        <g transform="rotate(3) translate(-4,16)">
+          <rect x="0" y="0" width="112" height="14" rx="3" fill="#b98bff"/>
+          <rect x="0" y="0" width="20" height="14" fill="#e0ccff"/>
+          <polygon points="112,0 129,7 112,14" fill="#f4c07a"/>
+          <polygon points="122,4 129,7 122,10" fill="#5a3d1e"/>
+        </g>
+      </g>
+      <g transform="translate(1010,690)">
+        <g transform="rotate(150)">
+          <rect x="0" y="0" width="120" height="15" rx="3" fill="#ffcf3f"/>
+          <rect x="0" y="0" width="16" height="15" fill="#ff9ec2"/>
+          <polygon points="120,0 138,7.5 120,15" fill="#f4c07a"/>
+          <polygon points="130,4 138,7.5 130,11" fill="#3a2a12"/>
+        </g>
+        <g transform="rotate(164) translate(0,2)">
+          <rect x="0" y="0" width="112" height="14" rx="3" fill="#ff8a5c"/>
+          <rect x="0" y="0" width="15" height="14" fill="#ffd0b8"/>
+          <polygon points="112,0 129,7 112,14" fill="#f4c07a"/>
+          <polygon points="121,4 129,7 121,10" fill="#3a2a12"/>
+        </g>
+      </g>
+      <g transform="translate(300,742) rotate(-8)">
+        <rect x="0" y="0" width="42" height="22" rx="4" fill="#ff9ec2" stroke="#e06a97" stroke-width="1.5"/>
+        <rect x="0" y="0" width="14" height="22" rx="4" fill="#f6f0ff" stroke="#e06a97" stroke-width="1.5"/>
+      </g>
+      <g transform="translate(1140,180) rotate(20)" fill="none" stroke="#8aa0b5" stroke-width="3">
+        <rect x="0" y="0" width="18" height="46" rx="9"/>
+        <rect x="4" y="6" width="10" height="30" rx="5"/>
+      </g>
+      <g transform="translate(6,560) rotate(74)">
+        <rect x="0" y="0" width="200" height="30" rx="4" fill="#ffe08a" stroke="#d9a441" stroke-width="2"/>
+        <g stroke="#d9a441" stroke-width="2">
+          <line x1="20" y1="0" x2="20" y2="12"/><line x1="40" y1="0" x2="40" y2="8"/>
+          <line x1="60" y1="0" x2="60" y2="12"/><line x1="80" y1="0" x2="80" y2="8"/>
+          <line x1="100" y1="0" x2="100" y2="12"/><line x1="120" y1="0" x2="120" y2="8"/>
+          <line x1="140" y1="0" x2="140" y2="12"/><line x1="160" y1="0" x2="160" y2="8"/>
+          <line x1="180" y1="0" x2="180" y2="12"/>
+        </g>
+      </g>
+      <g transform="translate(1090,20) rotate(15)" stroke="#7a8a99" stroke-width="6" fill="none" stroke-linecap="round">
+        <circle cx="30" cy="6" r="7" fill="#9aa8b5" stroke="none"/>
+        <line x1="30" y1="10" x2="8" y2="90"/>
+        <line x1="30" y1="10" x2="54" y2="86"/>
+        <polygon points="4,90 12,90 8,102" fill="#7a8a99" stroke="none"/>
+      </g>
+      <g transform="translate(1058,70)">
+        <rect x="0" y="30" width="90" height="16" rx="2" fill="#e05a5a"/>
+        <rect x="6" y="16" width="90" height="16" rx="2" fill="#4db6ff"/>
+        <rect x="2" y="2" width="90" height="16" rx="2" fill="#5ecb7a"/>
+        <circle cx="86" cy="-4" r="7" fill="#e05a5a"/>
+        <rect x="83" y="-14" width="3" height="8" fill="#5a3d1e"/>
+      </g>
+      <g transform="translate(1070,620)">
+        <circle cx="45" cy="45" r="42" fill="#7ec8f0" stroke="#3a7ca5" stroke-width="3"/>
+        <path d="M20 30 q25 -10 50 6 q-15 18 -40 12z" fill="#5ecb7a"/>
+        <path d="M35 60 q20 8 40 -4 q-4 16 -22 20z" fill="#5ecb7a"/>
+        <ellipse cx="45" cy="45" rx="42" ry="16" fill="none" stroke="#3a7ca5" stroke-width="1.5" opacity=".5"/>
+        <line x1="45" y1="3" x2="45" y2="87" stroke="#3a7ca5" stroke-width="1.5" opacity=".5"/>
+        <rect x="40" y="88" width="10" height="10" fill="#8a5a2a"/>
+      </g>
+      <g transform="translate(560,724)">
+        <path d="M20 6 C8 -2 -6 8 4 26 C10 40 18 44 20 44 C22 44 30 40 36 26 C46 8 32 -2 20 6 Z" fill="#e0403f"/>
+        <rect x="19" y="-4" width="3" height="10" fill="#7a4a1e"/>
+        <path d="M22 0 q10 -4 12 4 q-8 2 -12 -4z" fill="#5ecb7a"/>
+      </g>
+    </svg>
+
+    <div class="content">
+      <!-- ===== TOP BAR: STATUS BANNER + PASEK POSTĘPU ===== -->
+      <div class="top-bar">
+        <div id="statusBanner" class="status-banner">
+          <div id="statusText">Ładowanie statusu lekcji...</div>
+          <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+        </div>
+      </div>
+
+      <header>
+        <h1>PLAN LEKCJI KLASY Va</h1>
+        <div class="wych">Wychowawca: mgr Monika Olejniczak</div>
+      </header>
+
+      <!-- ===== MOBILNE ZAKŁADKI DNI ===== -->
+      <div class="mobile-tabs" id="mobileTabs"></div>
+
+      <!-- ===== DESKTOP TABLE ===== -->
+      <table id="scheduleTable">
+        <thead>
+          <tr>
+            <th class="timo">Godz.</th>
+            <th>Poniedziałek</th>
+            <th>Wtorek</th>
+            <th>Środa</th>
+            <th>Czwartek</th>
+            <th>Piątek</th>
+          </tr>
+        </thead>
+        <tbody id="desktopTbody">
+          <!-- Generowane dynamicznie z JS -->
+        </tbody>
+      </table>
+
+      <!-- ===== MOBILE SCHEDULE ===== -->
+      <div class="mobile-schedule" id="mobileSchedule">
+        <!-- Generowane dynamicznie z JS -->
+      </div>
+
+      <!-- ===== BOTTOM BAR: DARK MODE TOGGLE ===== -->
+      <div class="bottom-bar">
+        <button id="themeToggle" class="theme-toggle-btn" aria-label="Przełącz ciemny motyw">🌙 Tryb ciemny</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== JEDNO ŹRÓDŁO DANYCH (SINGLE SOURCE OF TRUTH) =====
+    const lessonTimes = [
+      { num: '1', time: '8.00–8.45', displayTime: '8:00–8:45', startMin: 8 * 60 + 0, endMin: 8 * 60 + 45 },
+      { num: '2', time: '8.55–9.40', displayTime: '8:55–9:40', startMin: 8 * 60 + 55, endMin: 9 * 60 + 40 },
+      { num: '3', time: '9.50–10.35', displayTime: '9:50–10:35', startMin: 9 * 60 + 50, endMin: 10 * 60 + 35 },
+      { num: '4', time: '10.45–11.30', displayTime: '10:45–11:30', startMin: 10 * 60 + 45, endMin: 11 * 60 + 30 },
+      { num: '5', time: '11.45–12.30', displayTime: '11:45–12:30', startMin: 11 * 60 + 45, endMin: 12 * 60 + 30 },
+      { num: '6', time: '12.50–13.35', displayTime: '12:50–13:35', startMin: 12 * 60 + 50, endMin: 13 * 60 + 35 }
+    ];
+
+    const daysData = [
+      {
+        dayNum: 1,
+        classKey: 'pon',
+        mobileClass: 'day-pon',
+        colClass: 'col-pon',
+        name: 'Poniedziałek',
+        shortName: 'Pon',
+        lessons: [
+          { icon: '🔬', name: 'matematyka', room: '243' },
+          { icon: '📚', name: 'j. polski', room: '125' },
+          { icon: '📚', name: 'j. polski', room: '125' },
+          { icon: '⚙️', name: 'technika', room: '103' },
+          { icon: '⚽', name: 'wf', room: 's. gimn.' },
+          { empty: true }
+        ]
+      },
+      {
+        dayNum: 2,
+        classKey: 'wt',
+        mobileClass: 'day-wt',
+        colClass: 'col-wt',
+        name: 'Wtorek',
+        shortName: 'Wt',
+        lessons: [
+          { empty: true },
+          { icon: '💬', name: 'zaj. z wych.', room: '243' },
+          { icon: '🌐', name: 'j. ang', room: '131' },
+          { icon: '📚', name: 'j. polski', room: '125' },
+          { icon: '🎨', name: 'plastyka', room: '125' },
+          { icon: '❤️', name: 'edu. zdrow.', room: '125' }
+        ]
+      },
+      {
+        dayNum: 3,
+        classKey: 'sr',
+        mobileClass: 'day-sr',
+        colClass: 'col-sr',
+        name: 'Środa',
+        shortName: 'Śr',
+        lessons: [
+          { icon: '🔬', name: 'matematyka', room: '243' },
+          { icon: '🏃', name: 'wf', room: 's. gimn.' },
+          { icon: '🧪', name: 'biologia', room: '203' },
+          { icon: '🏛️', name: 'historia', room: '221' },
+          { icon: '🌐', name: 'j. ang', room: '131' },
+          { icon: '💻', name: 'informatyka', room: '103' }
+        ]
+      },
+      {
+        dayNum: 4,
+        classKey: 'czw',
+        mobileClass: 'day-czw',
+        colClass: 'col-czw',
+        name: 'Czwartek',
+        shortName: 'Czw',
+        lessons: [
+          { icon: '📚', name: 'j. polski', room: '125' },
+          { icon: '🌍', name: 'geografia', room: '203' },
+          { icon: '🔬', name: 'matematyka', room: '243' },
+          { icon: '🏊', name: 'basen', room: 'pływ.' },
+          { icon: '🏛️', name: 'historia', room: '221' },
+          { empty: true }
+        ]
+      },
+      {
+        dayNum: 5,
+        classKey: 'pt',
+        mobileClass: 'day-pt',
+        colClass: 'col-pt',
+        name: 'Piątek',
+        shortName: 'Pt',
+        lessons: [
+          { icon: '🔬', name: 'matematyka', room: '243' },
+          { icon: '📚', name: 'j. polski', room: '125' },
+          { icon: '🏃', name: 'wf', room: 's. gimn.' },
+          { icon: '🌐', name: 'j. ang', room: '203' },
+          { icon: '🎵', name: 'muzyka', room: '50' },
+          { icon: '🙏', name: 'religia', room: '141' }
+        ]
+      }
+    ];
+
+    let activeSubjectFilter = null;
+
+    // Pobieranie czasu w strefie czasowej Polski
+    function getSieradzTimeInfo() {
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Europe/Warsaw',
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        hour12: false
+      });
+      
+      const parts = formatter.formatToParts(now);
+      const p = {};
+      parts.forEach(item => { p[item.type] = parseInt(item.value, 10); });
+
+      const hour = p.hour === 24 ? 0 : p.hour;
+      const d = new Date(p.year, p.month - 1, p.day, hour, p.minute, p.second);
+      
+      return {
+        dayOfWeek: d.getDay(),
+        totalMinutes: hour * 60 + p.minute,
+        hour: hour,
+        minute: p.minute
+      };
+    }
+
+    // Dynamiczne renderowanie tabeli dla Desktopu
+    function renderDesktopSchedule() {
+      const tbody = document.getElementById('desktopTbody');
+      tbody.innerHTML = '';
+
+      lessonTimes.forEach((slot, lIdx) => {
+        const tr = document.createElement('tr');
+        
+        const tdNr = document.createElement('td');
+        tdNr.className = 'nr';
+        tdNr.innerHTML = `<span class="num"><span class="bell"><strong>🔔</strong></span><span class="no"><strong>${slot.num}</strong></span><span class="time"><strong>${slot.time}</strong></span></span>`;
+        tr.appendChild(tdNr);
+
+        daysData.forEach((day) => {
+          const td = document.createElement('td');
+          td.className = `cell ${day.colClass}`;
+          
+          const lesson = day.lessons[lIdx];
+          const daySpan = `<span class="day-label">${day.name}</span>`;
+
+          if (!lesson || lesson.empty) {
+            td.innerHTML = `${daySpan}<div class="tile empty"><span class="txt"><span class="p">&mdash;</span></span></div>`;
+          } else {
+            const subjectKey = lesson.name.toLowerCase().trim();
+            td.innerHTML = `
+              ${daySpan}
+              <div class="tile" data-subject="${subjectKey}">
+                <span class="ico">${lesson.icon}</span>
+                <span class="txt">
+                  <span class="p">${lesson.name}</span>
+                  <span class="s">${lesson.room}</span>
+                </span>
+              </div>
+            `;
+          }
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Dynamiczne renderowanie widoku mobilnego + Nawigacja zakładkami
+    function renderMobileSchedule() {
+      const schedule = document.getElementById('mobileSchedule');
+      schedule.innerHTML = '';
+
+      daysData.forEach(day => {
+        const dayCard = document.createElement('div');
+        dayCard.className = `day-card ${day.mobileClass}`;
+        dayCard.dataset.day = day.dayNum;
+
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'day-header';
+        dayHeader.textContent = day.name;
+        dayCard.appendChild(dayHeader);
+
+        const lessonsContainer = document.createElement('div');
+        lessonsContainer.className = 'lessons-container';
+
+        day.lessons.forEach((lesson, lIdx) => {
+          const slot = lessonTimes[lIdx];
+          const lessonRow = document.createElement('div');
+          lessonRow.className = 'lesson-row';
+          lessonRow.dataset.lesson = lIdx;
+
+          const lessonTime = document.createElement('div');
+          lessonTime.className = 'lesson-time';
+          lessonTime.innerHTML = `<span class="bell"><strong>🔔</strong></span><span class="no"><strong>${slot.num}</strong></span><span class="time"><strong>${slot.displayTime}</strong></span>`;
+
+          const lessonInfo = document.createElement('div');
+          lessonInfo.className = 'lesson-info';
+
+          if (!lesson || lesson.empty) {
+            lessonInfo.innerHTML = '<div class="lesson-empty">—</div>';
+          } else {
+            const subjectKey = lesson.name.toLowerCase().trim();
+            lessonInfo.dataset.subject = subjectKey;
+            lessonInfo.innerHTML = `
+              <div class="lesson-content">
+                <span class="lesson-icon">${lesson.icon}</span>
+                <div class="lesson-name">${lesson.name}</div>
+                <div class="lesson-room">${lesson.room}</div>
+              </div>
+            `;
+          }
+
+          lessonRow.appendChild(lessonTime);
+          lessonRow.appendChild(lessonInfo);
+          lessonsContainer.appendChild(lessonRow);
+        });
+
+        dayCard.appendChild(lessonsContainer);
+        schedule.appendChild(dayCard);
+      });
+
+      renderMobileTabs();
+    }
+
+    // Nawigacja Zakładkami (Mobile)
+    function renderMobileTabs() {
+      const timeInfo = getSieradzTimeInfo();
+      const today = timeInfo.dayOfWeek;
+      const totalMins = timeInfo.totalMinutes;
+
+      let initialDay = today;
+      if (initialDay < 1 || initialDay > 5) {
+        initialDay = 1;
+      } else if (totalMins >= 14 * 60) {
+        if (initialDay < 5) initialDay += 1;
+        else initialDay = 1;
+      }
+
+      const tabsContainer = document.getElementById('mobileTabs');
+      tabsContainer.innerHTML = '';
+
+      daysData.forEach(day => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${day.dayNum === initialDay ? 'active' : ''}`;
+        btn.textContent = day.shortName;
+        btn.onclick = () => switchMobileTab(day.dayNum);
+        tabsContainer.appendChild(btn);
+      });
+
+      switchMobileTab(initialDay);
+    }
+
+    function switchMobileTab(dayNum) {
+      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', (idx + 1) === dayNum);
+      });
+
+      document.querySelectorAll('.day-card').forEach(card => {
+        card.classList.toggle('active-tab', parseInt(card.dataset.day, 10) === dayNum);
+      });
+    }
+
+    // Aktualizacja Paska Statusu, Paska Postępu oraz Podświetleń
+    function updateLiveStatusAndHighlight() {
+      document.querySelectorAll('.active-lesson').forEach(el => el.classList.remove('active-lesson'));
+
+      const timeInfo = getSieradzTimeInfo();
+      const day = timeInfo.dayOfWeek; 
+      const mins = timeInfo.totalMinutes;
+      const bannerText = document.getElementById('statusText');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+
+      if (day < 1 || day > 5) {
+        bannerText.innerHTML = '🏖️ <strong>Weekend!</strong> Odpoczywaj przed nadchodzącym tygodniem.';
+        progressContainer.style.display = 'none';
+        applySubjectHighlighting();
+        return;
+      }
+
+      const todayData = daysData.find(d => d.dayNum === day);
+      if (!todayData) return;
+
+      const firstStart = lessonTimes[0].startMin;
+      const lastEnd = lessonTimes[lessonTimes.length - 1].endMin;
+
+      // Przed lekcjami
+      if (mins < firstStart) {
+        const diff = firstStart - mins;
+        bannerText.innerHTML = `🌅 Dzień dobry! Pierwsza lekcja rozpoczyna się za <strong>${diff} min</strong>.`;
+        progressContainer.style.display = 'none';
+        applySubjectHighlighting();
+        return;
+      }
+
+      // Po lekcjach
+      if (mins > lastEnd) {
+        bannerText.innerHTML = '🎉 <strong>Lekcje zakończone na dziś!</strong> Miłego popołudnia.';
+        progressContainer.style.display = 'none';
+        applySubjectHighlighting();
+        return;
+      }
+
+      let currentLessonIdx = -1;
+      let isBreak = false;
+      let nextLessonIdx = -1;
+
+      for (let i = 0; i < lessonTimes.length; i++) {
+        if (mins >= lessonTimes[i].startMin && mins <= lessonTimes[i].endMin) {
+          currentLessonIdx = i;
+          break;
+        }
+        if (i < lessonTimes.length - 1) {
+          if (mins > lessonTimes[i].endMin && mins < lessonTimes[i + 1].startMin) {
+            isBreak = true;
+            nextLessonIdx = i + 1;
+            break;
+          }
+        }
+      }
+
+      if (currentLessonIdx !== -1) {
+        // TRWA LEKCJA
+        const lesson = todayData.lessons[currentLessonIdx];
+        const slot = lessonTimes[currentLessonIdx];
+        const timeLeft = slot.endMin - mins;
+        const totalDuration = slot.endMin - slot.startMin;
+        const elapsed = mins - slot.startMin;
+        const pct = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+
+        progressContainer.style.display = 'block';
+        progressBar.style.width = `${pct.toFixed(1)}%`;
+        progressBar.style.background = 'linear-gradient(90deg, #ff4757, #ff6b81)';
+
+        if (lesson && !lesson.empty) {
+          bannerText.innerHTML = `🔴 Trwa lekcja: <strong>${lesson.name}</strong> (s. ${lesson.room}) | Do końca: <strong>${timeLeft} min</strong>`;
+        } else {
+          bannerText.innerHTML = `🔴 Okienko / Wolna godzina | Do końca: <strong>${timeLeft} min</strong>`;
+        }
+
+        // Podświetlenie lekcji w tabeli desktopowej
+        const rows = document.querySelectorAll('#desktopTbody tr');
+        if (rows[currentLessonIdx]) {
+          const targetCell = rows[currentLessonIdx].children[day];
+          if (targetCell) {
+            const tile = targetCell.querySelector('.tile');
+            if (tile && !tile.classList.contains('empty')) tile.classList.add('active-lesson');
+          }
+        }
+
+        // Podświetlenie lekcji w widoku mobilnym
+        const activeMobileCard = document.querySelector(`.day-card[data-day="${day}"]`);
+        if (activeMobileCard) {
+          const lessonRows = activeMobileCard.querySelectorAll('.lesson-row');
+          if (lessonRows[currentLessonIdx]) {
+            const lessonInfo = lessonRows[currentLessonIdx].querySelector('.lesson-info');
+            if (lessonInfo && !lessonInfo.querySelector('.lesson-empty')) lessonInfo.classList.add('active-lesson');
+          }
+        }
+      } else if (isBreak && nextLessonIdx !== -1) {
+        // TRWA PRZERWA
+        const prevSlotEnd = lessonTimes[nextLessonIdx - 1].endMin;
+        const nextSlotStart = lessonTimes[nextLessonIdx].startMin;
+        const nextLesson = todayData.lessons[nextLessonIdx];
+        const timeLeft = nextSlotStart - mins;
+
+        const totalDuration = nextSlotStart - prevSlotEnd;
+        const elapsed = mins - prevSlotEnd;
+        const pct = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+
+        progressContainer.style.display = 'block';
+        progressBar.style.width = `${pct.toFixed(1)}%`;
+        progressBar.style.background = 'linear-gradient(90deg, #2ed573, #7bed9f)';
+
+        if (nextLesson && !nextLesson.empty) {
+          bannerText.innerHTML = `☕ Przerwa! Następna lekcja: <strong>${nextLesson.name}</strong> (s. ${nextLesson.room}) za <strong>${timeLeft} min</strong>`;
+        } else {
+          bannerText.innerHTML = `☕ Przerwa! Do kolejnej godziny pozostało: <strong>${timeLeft} min</strong>`;
+        }
+      }
+
+      applySubjectHighlighting();
+    }
+
+    // ===== PODŚWIETLANIE PRZEDMIOTU PO KLIKNIĘCIU =====
+    function setupSubjectHighlighting() {
+      document.addEventListener('click', (e) => {
+        const tile = e.target.closest('.tile, .lesson-info');
+        if (!tile || tile.classList.contains('empty') || tile.querySelector('.lesson-empty')) return;
+
+        const subject = tile.dataset.subject;
+        if (!subject) return;
+
+        if (activeSubjectFilter === subject) {
+          activeSubjectFilter = null;
+        } else {
+          activeSubjectFilter = subject;
+        }
+
+        applySubjectHighlighting();
+      });
+    }
+
+    function applySubjectHighlighting() {
+      const allTiles = document.querySelectorAll('.tile, .lesson-info');
+      
+      allTiles.forEach(tile => {
+        const isEmpty = tile.classList.contains('empty') || tile.querySelector('.lesson-empty') !== null;
+        const subj = tile.dataset.subject;
+
+        if (!activeSubjectFilter) {
+          tile.classList.remove('dimmed', 'highlighted');
+        } else {
+          if (!isEmpty && subj === activeSubjectFilter) {
+            tile.classList.add('highlighted');
+            tile.classList.remove('dimmed');
+          } else {
+            tile.classList.add('dimmed');
+            tile.classList.remove('highlighted');
+          }
+        }
+      });
+    }
+
+    // ===== PRZEŁĄCZNIK MOTYWU (DARK MODE) =====
+    function setupThemeToggle() {
+      const toggleBtn = document.getElementById('themeToggle');
+      
+      const savedTheme = localStorage.getItem('schedule_theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        toggleBtn.textContent = '☀️ Tryb jasny';
+      }
+
+      toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        toggleBtn.textContent = isDark ? '☀️ Tryb jasny' : '🌙 Tryb ciemny';
+        localStorage.setItem('schedule_theme', isDark ? 'dark' : 'light');
+      });
+    }
+
+    // INICJALIZACJA STRONY
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDesktopSchedule();
+      renderMobileSchedule();
+      setupSubjectHighlighting();
+      setupThemeToggle();
+      
+      updateLiveStatusAndHighlight();
+      setInterval(updateLiveStatusAndHighlight, 10000);
+    });
+  </script>
+</body>
+</html>
